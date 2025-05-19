@@ -1,0 +1,77 @@
+"use client";
+
+import type React from "react";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { logout } from "@/lib/auth";
+
+export function Header() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+    router.refresh();
+  };
+
+  return (
+    <header className="sticky top-0 z-10 flex items-center h-16 px-4 border-b bg-background">
+      <div className="flex items-center gap-2 md:gap-4">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6 text-white"
+            >
+              <path d="M18 3v4c0 2-2 4-4 4H2" />
+              <path d="M18 3a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
+              <path d="M6 21v-4c0-2 2-4 4-4h12" />
+              <path d="M6 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+            </svg>
+          </div>
+          <span className="text-xl font-bold">Drive</span>
+        </Link>
+      </div>
+      <div className="flex items-center gap-2 ml-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Avatar>
+                <AvatarImage
+                  src="/placeholder.svg?height=32&width=32"
+                  alt="User"
+                />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+}
