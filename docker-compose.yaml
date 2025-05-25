@@ -1,0 +1,8 @@
+services:
+  postgres:
+    image: postgres
+    ports:
+      - 5430:5432
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sora_db
