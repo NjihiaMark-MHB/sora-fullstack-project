@@ -38,25 +38,6 @@ class UsersService {
     }
   }
 
-  async getUserByUUID(uuid: string) {
-    try {
-      const [user] = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.uuid, uuid));
-      return user;
-    } catch (error) {
-      logger.error(
-        { service: "UsersService - getUserByUUID" },
-        error as string
-      );
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Failed to retrieve user by UUID",
-      });
-    }
-  }
-
   async getUserByEmail(email: string) {
     try {
       const [user] = await this.db
@@ -76,7 +57,7 @@ class UsersService {
     }
   }
 
-  async getUserById(id: number) {
+  async getUserById(id: string) {
     try {
       const [user] = await this.db.select().from(users).where(eq(users.id, id));
       return user;
@@ -89,7 +70,7 @@ class UsersService {
     }
   }
 
-  async updateUser(id: number, data: Partial<User>) {
+  async updateUser(id: string, data: Partial<User>) {
     try {
       const [updatedUser] = await this.db
         .update(users)
@@ -106,7 +87,7 @@ class UsersService {
     }
   }
 
-  async deleteUser(id: number) {
+  async deleteUser(id: string) {
     try {
       const [deletedUser] = await this.db
         .delete(users)

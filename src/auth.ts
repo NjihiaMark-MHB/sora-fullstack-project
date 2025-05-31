@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/database";
 import { users } from "@/trpc/users/schema";
+import { accounts, sessions, verificationTokens } from "@/trpc/auth/schema";
 import { eq } from "drizzle-orm";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
@@ -14,7 +15,12 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
   providers: [
     Credentials({
       credentials: { email: {}, password: {} },
@@ -32,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isValid) return null;
 
         return {
-          id: user.uuid.toString(),
+          id: user.id.toString(),
           email: user.email,
           name: user.name,
           image: user.image,

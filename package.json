@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:revert": "drizzle-kit revert"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.9.1",
@@ -27,7 +30,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.5.0",
-    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
@@ -48,6 +50,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.1",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "pino-pretty": "^13.0.0",

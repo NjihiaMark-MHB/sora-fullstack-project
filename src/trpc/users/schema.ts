@@ -8,8 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  uuid: uuid("uuid").defaultRandom().notNull().unique(),
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
   // NextAuth-required fields
   email: varchar("email", { length: 255 }).unique().notNull(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
