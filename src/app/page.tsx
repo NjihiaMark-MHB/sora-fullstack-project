@@ -1,16 +1,16 @@
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { FileUpload } from "@/components/file-upload";
 import { FolderCreation } from "@/components/folder-creation";
 import { FileBrowser } from "@/components/file-browser";
-import { getSession } from "@/lib/auth";
 
 export default async function HomePage() {
-  const session = await getSession();
-
-  if (!session) {
+  const session = await auth();
+  if (!session?.user) {
     redirect("/login");
+  } else {
+    console.log(session.user);
   }
-
   return (
     <main className="flex-1 overflow-auto">
       <div className="m-auto container py-6">

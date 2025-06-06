@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -41,9 +41,16 @@ export default function SignupPage() {
   // Use the useMutation hook with the tRPC options
   const { mutate, isPending } = useMutation({
     ...trpc.user.register.mutationOptions(),
-    onSuccess: () => {
-      router.push("/");
-      router.refresh();
+    onSuccess: async (data, variables) => {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: variables.email,
+        password: variables.password,
+      });
+      if (result?.ok) {
+        router.push("/");
+        router.refresh();
+      }
     },
     onError: (err) => {
       setError(err.message);
@@ -132,7 +139,11 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 mt-6">
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={isPending}
+            >
               {isPending ? "Creating account..." : "Sign Up"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">

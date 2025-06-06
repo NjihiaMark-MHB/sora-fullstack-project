@@ -3,6 +3,9 @@
 import type React from "react";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, inferredLoginSchema } from "@/app-zod-schemas/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,32 +19,43 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { login } from "@/lib/auth";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<inferredLoginSchema>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = handleSubmit(async (data) => {
     setIsLoading(true);
     setError("");
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
     try {
-      await login({ email, password });
-      router.push("/");
-      router.refresh();
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+        redirectTo: "/", // This is stored but not used automatically with redirect: false
+      });
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        // Manual redirect to the intended destination
+        router.push("/");
+      }
     } catch (error) {
       setError("Invalid email or password");
     } finally {
       setIsLoading(false);
     }
-  }
+  });
 
   return (
     <div className="flex w-full items-center justify-center min-h-screen bg-muted/40">
@@ -52,7 +66,7 @@ export default function LoginPage() {
             Enter your email and password to access your drive
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={onSubmit}>
           <CardContent className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-white bg-red-500 rounded-md">
@@ -61,15 +75,37 @@ export default function LoginPage() {
             )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
+              <Input
+                id="email"
+                type="email"
+                {...register("email")}
+                aria-invalid={errors.email ? "true" : "false"}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input
+                id="password"
+                {...register("password")}
+                aria-invalid={errors.password ? "true" : "false"}
+                type="password"
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          <CardFooter className="flex flex-col space-y-4 mt-6">
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={isLoading}
+            >
               {isLoading ? "Logging in..." : "Login"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
