@@ -16,33 +16,51 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { signup } from "@/lib/auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  createUserSchema,
+  inferredCreateUserSchema,
+} from "@/app-zod-schemas/auth";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const trpc = useTRPC();
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsLoading(true);
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<inferredCreateUserSchema>({
+    resolver: zodResolver(createUserSchema),
+  });
 
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    try {
-      await signup({ name, email, password });
+  // Use the useMutation hook with the tRPC options
+  const { mutate, isPending } = useMutation({
+    ...trpc.user.register.mutationOptions(),
+    onSuccess: () => {
       router.push("/");
       router.refresh();
-    } catch (error) {
-      setError("Failed to create account");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    },
+    onError: (err) => {
+      setError(err.message);
+      console.error(err);
+    },
+  });
+
+  // Create the submit handler that uses both RHF and tRPC mutation
+  const onSubmit = handleSubmit((data) => {
+    setError("");
+
+    mutate({
+      name: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      password: data.password,
+    });
+  });
 
   return (
     <div className="w-full flex items-center justify-center min-h-screen bg-muted/40">
@@ -53,7 +71,7 @@ export default function SignupPage() {
             Create an account to access your drive
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={onSubmit}>
           <CardContent className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-white bg-red-500 rounded-md">
@@ -61,21 +79,61 @@ export default function SignupPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" required />
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                {...register("firstName")}
+                aria-invalid={errors.firstName ? "true" : "false"}
+              />
+              {errors.firstName && (
+                <p className="text-sm text-red-500">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                {...register("lastName")}
+                aria-invalid={errors.lastName ? "true" : "false"}
+              />
+              {errors.lastName && (
+                <p className="text-sm text-red-500">
+                  {errors.lastName.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
+              <Input
+                id="email"
+                type="email"
+                {...register("email")}
+                aria-invalid={errors.email ? "true" : "false"}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input
+                id="password"
+                type="password"
+                {...register("password")}
+                aria-invalid={errors.password ? "true" : "false"}
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Sign Up"}
+          <CardFooter className="flex flex-col space-y-4 mt-6">
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Creating account..." : "Sign Up"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Already have an account?{" "}
