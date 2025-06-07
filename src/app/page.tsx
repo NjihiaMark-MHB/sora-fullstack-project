@@ -8,8 +8,6 @@ export default async function HomePage() {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
-  } else {
-    console.log(session.user);
   }
   return (
     <main className="flex-1 overflow-auto">

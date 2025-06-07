@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { ProgressProvider } from "@bprogress/next/app";
 import type { AppRouter } from "@/trpc/root";
 import { TRPCProvider } from "@/utils/trpc";
 
@@ -47,7 +48,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ProgressProvider height="4px" color="#fd79a8">
+            {children}
+          </ProgressProvider>
           <Toaster />
         </ThemeProvider>
       </TRPCProvider>
