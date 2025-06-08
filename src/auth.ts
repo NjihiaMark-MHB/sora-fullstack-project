@@ -1,5 +1,6 @@
 import NextAuth, { DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "@/database";
 import { users } from "@/trpc/users/schema";
@@ -52,6 +53,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       credentials: { email: {}, password: {} },
       authorize: async (credentials) => {

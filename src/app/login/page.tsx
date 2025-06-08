@@ -20,10 +20,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { signIn } from "next-auth/react";
+import { useMutation } from "@tanstack/react-query";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const {
@@ -34,27 +34,34 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = handleSubmit(async (data) => {
-    setIsLoading(true);
-    setError("");
-    try {
+  // Use the useMutation hook for login
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: inferredLoginSchema) => {
       const result = await signIn("credentials", {
         redirect: false,
         email: data.email,
         password: data.password,
         redirectTo: "/", // This is stored but not used automatically with redirect: false
       });
+
       if (result?.error) {
-        setError("Invalid email or password");
-      } else {
-        // Manual redirect to the intended destination
-        router.push("/");
+        throw new Error("Invalid email or password");
       }
-    } catch (error) {
-      setError("Invalid email or password");
-    } finally {
-      setIsLoading(false);
-    }
+
+      return result;
+    },
+    onSuccess: () => {
+      // Manual redirect to the intended destination
+      router.push("/");
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    setError("");
+    mutate(data);
   });
 
   return (
@@ -104,9 +111,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full cursor-pointer"
-              disabled={isLoading}
+              disabled={isPending}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isPending ? "Logging in..." : "Login"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Don&apos;t have an account?{" "}
