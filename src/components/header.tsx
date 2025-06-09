@@ -52,7 +52,11 @@ export function Header() {
       <div className="flex items-center gap-2 ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full cursor-pointer"
+            >
               <Avatar>
                 <AvatarImage
                   src="/placeholder.svg?height=32&width=32"
