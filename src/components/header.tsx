@@ -4,7 +4,6 @@ import type React from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -16,6 +15,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
+
+// Utility function to get initials from name
+const getInitials = (name: string | null | undefined): string => {
+  if (!name) return "U";
+
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+};
 
 export function Header() {
   const router = useRouter();
@@ -60,13 +71,9 @@ export function Header() {
                 className="rounded-full cursor-pointer"
               >
                 <Avatar>
-                  <AvatarImage
-                    //src={`${session?.user?.image}?t=${Date.now()}`}
-                    src={session?.user?.image!}
-                    alt="User"
-                  />
+                  <AvatarImage src={session?.user?.image!} alt="User" />
                   <AvatarFallback>
-                    <User className="h-5 w-5" />
+                    {getInitials(session?.user?.name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
