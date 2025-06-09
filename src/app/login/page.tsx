@@ -52,7 +52,8 @@ export default function LoginPage() {
     },
     onSuccess: () => {
       // Manual redirect to the intended destination
-      router.push("/");
+      router.replace("/");
+      router.refresh();
     },
     onError: (err: Error) => {
       setError(err.message);

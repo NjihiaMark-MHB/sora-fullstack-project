@@ -15,10 +15,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export function Header() {
   const router = useRouter();
-
+  const { data: session } = useSession();
   const handleLogout = async () => {
     await signOut();
     router.push("/login");
@@ -49,33 +50,36 @@ export function Header() {
           <span className="text-xl font-bold">Drive</span>
         </Link>
       </div>
-      <div className="flex items-center gap-2 ml-auto">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full cursor-pointer"
-            >
-              <Avatar>
-                <AvatarImage
-                  src="/placeholder.svg?height=32&width=32"
-                  alt="User"
-                />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {session && (
+        <div className="flex items-center gap-2 ml-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full cursor-pointer"
+              >
+                <Avatar>
+                  <AvatarImage
+                    //src={`${session?.user?.image}?t=${Date.now()}`}
+                    src={session?.user?.image!}
+                    alt="User"
+                  />
+                  <AvatarFallback>
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </header>
   );
 }
