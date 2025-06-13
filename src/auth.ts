@@ -7,6 +7,7 @@ import { users } from "@/trpc/users/schema";
 import { accounts, sessions, verificationTokens } from "@/trpc/auth/schema";
 import { eq } from "drizzle-orm";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { JWT } from "next-auth/jwt";
 
 // Extend the built-in Session User type

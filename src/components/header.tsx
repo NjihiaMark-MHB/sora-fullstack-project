@@ -71,7 +71,7 @@ export function Header() {
                 className="rounded-full cursor-pointer"
               >
                 <Avatar>
-                  <AvatarImage src={session?.user?.image!} alt="User" />
+                  <AvatarImage src={session?.user?.image || ''} alt="User" />
                   <AvatarFallback>
                     {getInitials(session?.user?.name)}
                   </AvatarFallback>

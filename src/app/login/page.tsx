@@ -70,7 +70,7 @@ export default function LoginPage() {
     setError("");
     try {
       await signIn("google", { redirectTo: "/" });
-    } catch (err) {
+    } catch {
       setError("Failed to sign in with Google");
     }
   };

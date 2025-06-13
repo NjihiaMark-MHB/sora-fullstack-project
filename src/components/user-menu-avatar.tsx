@@ -8,17 +8,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getSession, logout } from "@/lib/auth";
+import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 
-async function UserMenuAvatar() {
+function UserMenuAvatar() {
   const router = useRouter();
-  const session = await getSession();
+  const session = useSession();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     router.refresh();
   };
