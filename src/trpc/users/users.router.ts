@@ -2,7 +2,7 @@ import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "@/database";
 import { eq } from "drizzle-orm";
-import { hashPassword } from "@/utils/argon";
+import { hashPassword } from "../../utils/argon";
 import { users } from "./schema";
 
 export const usersRouter = router({
