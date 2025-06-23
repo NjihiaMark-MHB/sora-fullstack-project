@@ -2,14 +2,14 @@ import { db } from "@/database";
 import { users } from "./schema";
 import { eq } from "drizzle-orm";
 import type { User, NewUser } from "./schema";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import logger from "../logger";
 import { TRPCError } from "@trpc/server";
 
 class UsersService {
-  private db: PostgresJsDatabase;
+  private db: NeonHttpDatabase;
 
-  constructor(database: PostgresJsDatabase) {
+  constructor(database: NeonHttpDatabase) {
     this.db = database;
   }
 

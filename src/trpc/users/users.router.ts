@@ -2,7 +2,7 @@ import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "@/database";
 import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
+import { hashPassword } from "@/utils/argon";
 import { users } from "./schema";
 
 export const usersRouter = router({
@@ -29,7 +29,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10);
+      const hashedPassword = await hashPassword(input.password);
       const existingUser = await db
         .select()
         .from(users)

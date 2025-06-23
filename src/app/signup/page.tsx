@@ -19,9 +19,9 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createUserSchema,
-  inferredCreateUserSchema,
+  createUserSchema
 } from "@/app-zod-schemas/auth";
+import type {inferredCreateUserSchema} from "@/app-zod-schemas/auth";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
 
@@ -41,7 +41,7 @@ export default function SignupPage() {
   // Use the useMutation hook with the tRPC options
   const { mutate, isPending } = useMutation({
     ...trpc.user.register.mutationOptions(),
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       const result = await signIn("credentials", {
         redirect: false,
         email: variables.email,

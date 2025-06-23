@@ -1,24 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sora Fullstack Project
+
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/create-next-app).
 
 ## Getting Started
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Code Quality Tools
+
+This project uses both TypeScript and ESLint to ensure code quality:
+
+### TypeScript Type Checking
+
+Run the TypeScript compiler to check for type errors:
+
+```bash
+pnpm type-check
+```
+
+### ESLint Code Quality Checks
+
+Run ESLint to check for code quality issues:
+
+```bash
+pnpm lint
+```
+
+### Combined Check
+
+Run both TypeScript and ESLint checks at once:
+
+```bash
+pnpm check
+```
+
+### Pre-commit Hook
+
+A pre-commit hook is configured using Husky to run both TypeScript and ESLint checks before each commit. This ensures that code quality is maintained throughout the development process.
+
+## Database Management
+
+This project uses Drizzle ORM for database management:
+
+```bash
+# Generate database schema
+pnpm db:generate
+
+# Push schema changes to the database
+pnpm db:push
+
+# Revert schema changes
+pnpm db:revert
+```
 
 ## Learn More
 
