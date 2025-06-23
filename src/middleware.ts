@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const session = await auth();
   const { pathname } = request.nextUrl;
+  
+  // Check for session cookie directly from request
+  const sessionCookie = request.cookies.get("next-auth.session-token");
+  const isAuthenticated = !!sessionCookie;
 
   // If the user is authenticated and trying to access login or signup pages
-  if (session && (pathname === "/login" || pathname === "/signup")) {
+  if (isAuthenticated && (pathname === "/login" || pathname === "/signup")) {
     // Redirect to the home page
     return NextResponse.redirect(new URL("/", request.url));
   }
