@@ -1,9 +1,6 @@
 import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
-import { db } from "@/database";
-import { eq } from "drizzle-orm";
-import { hashPassword } from "../../utils/argon";
-import { users } from "./schema";
+import { usersService } from "./users.service";
 
 export const usersRouter = router({
   register: publicProcedure
@@ -29,19 +26,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const hashedPassword = await hashPassword(input.password);
-      const existingUser = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, input.email));
-      if (existingUser.length > 0) {
-        throw new Error("Email already in use");
-      }
-      await db.insert(users).values({
-        name: input.name,
-        email: input.email,
-        password: hashedPassword,
-      });
+      await usersService.createUser(input);
       return { success: true };
     }),
 });

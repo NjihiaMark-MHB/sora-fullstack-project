@@ -1,10 +1,11 @@
 import { db } from "@/database";
 import { users } from "./schema";
 import { eq } from "drizzle-orm";
-import type { User, NewUser } from "./schema";
+import type { User } from "./schema";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import logger from "../logger";
 import { TRPCError } from "@trpc/server";
+import { hashPassword } from "../../utils/argon";
 
 class UsersService {
   private db: NeonHttpDatabase;
@@ -13,11 +14,43 @@ class UsersService {
     this.db = database;
   }
 
-  async createUser(user: NewUser) {
+  async createUser(userData: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
     try {
-      const [newUser] = await this.db.insert(users).values(user).returning();
-      return newUser;
+      // Check if user with this email already exists
+      const existingUser = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.email, userData.email));
+
+      if (existingUser.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Email already in use",
+        });
+      }
+
+      // Hash the password
+      const hashedPassword = await hashPassword(userData.password);
+
+      // Create the user with hashed password
+      const [newUser] = await this.db
+        .insert(users)
+        .values({
+          name: userData.name,
+          email: userData.email,
+          password: hashedPassword,
+        })
+        .returning();
+
+      return JSON.stringify(newUser);
     } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error; // Re-throw TRPC errors
+      }
       logger.error({ service: "UsersService - createUser" }, error as string);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
