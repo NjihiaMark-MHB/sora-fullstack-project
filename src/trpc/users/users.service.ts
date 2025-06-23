@@ -5,7 +5,7 @@ import type { User } from "./schema";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import logger from "../logger";
 import { TRPCError } from "@trpc/server";
-import { hashPassword } from "../../utils/argon";
+import { hashPassword } from "../../utils/webcrypto";
 
 class UsersService {
   private db: NeonHttpDatabase;

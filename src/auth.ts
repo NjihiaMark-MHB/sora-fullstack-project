@@ -14,7 +14,7 @@ import { users } from "@/trpc/users/schema";
 import { accounts, sessions, verificationTokens } from "@/trpc/auth/schema";
 
 // Utilities
-import { verifyPassword } from "./utils/argon";
+import { verifyPassword } from "./utils/webcrypto";
 
 // This empty import is needed for the module augmentation below
 import type {} from "next-auth/jwt";
