@@ -7,12 +7,23 @@ const nextConfig: NextConfig = {
   /* config options here */
   // Enable WebAssembly support for webpack
   webpack(config) {
+    // Enable WebAssembly with both async and sync support
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
+      syncWebAssembly: true,
       layers: true,
       topLevelAwait: true,
     };
+    
+    // Add WASM MIME type to asset modules
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/wasm/[name].[hash][ext]'
+      }
+    });
     
     // Copy WebAssembly files to the public directory
     config.plugins = [
