@@ -18,8 +18,19 @@ function getBaseUrl(): string {
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  // Server-side - use absolute URL with the host from environment or default
-  // In Next.js server environment, we need an absolute URL
+  
+  // Server-side - use Vercel's environment variables if available
+  // Vercel provides VERCEL_URL for all deployments
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // For custom domains on production, use PROJECT_PRODUCTION_URL if available
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  
+  // Fallback to custom environment variable or localhost
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
 
