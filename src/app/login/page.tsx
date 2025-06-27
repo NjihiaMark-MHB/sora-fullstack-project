@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/app-zod-schemas/auth";
 import type {inferredLoginSchema} from "@/app-zod-schemas/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +23,6 @@ import { signIn } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
 
   const {
@@ -38,11 +36,9 @@ export default function LoginPage() {
   // Use the useMutation hook for login
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: inferredLoginSchema) => {
-      const result = await signIn("credentials", {
+      const result = await signIn("resend", {
         redirect: false,
         email: data.email,
-        password: data.password,
-        redirectTo: "/", // This is stored but not used automatically with redirect: false
       });
 
       if (result?.error) {
@@ -52,9 +48,7 @@ export default function LoginPage() {
       return result;
     },
     onSuccess: () => {
-      // Manual redirect to the intended destination
-      router.replace("/");
-      router.refresh();
+      // show message that a login link was sent to their email
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -82,7 +76,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Login</CardTitle>
           <CardDescription>
-            Enter your email and password to access your drive
+            Enter your email to access your drive
           </CardDescription>
         </CardHeader>
         <form onSubmit={onSubmit}>
@@ -102,20 +96,6 @@ export default function LoginPage() {
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                {...register("password")}
-                aria-invalid={errors.password ? "true" : "false"}
-                type="password"
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">
-                  {errors.password.message}
-                </p>
               )}
             </div>
           </CardContent>

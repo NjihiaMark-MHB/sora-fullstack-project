@@ -3,9 +3,14 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Check for session cookie directly from request
-  const sessionCookie = request.cookies.get("next-auth.session-token");
+
+  // Check for database session cookie directly from request
+  // When using database sessions, the cookie name could be different
+  // Try all possible cookie names for NextAuth sessions
+  const sessionCookie =
+    request.cookies.get("next-auth.session-token") ||
+    request.cookies.get("__Secure-next-auth.session-token");
+
   const isAuthenticated = !!sessionCookie;
 
   // If the user is authenticated and trying to access login or signup pages
@@ -18,7 +23,13 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure the middleware to only run on login and signup pages
+// Configure the middleware to run on login, signup, and other protected paths
 export const config = {
-  matcher: ["/login", "/signup"],
+  matcher: [
+    // Auth pages - redirect to home if already authenticated
+    "/login",
+    "/signup",
+    // Add other paths that should be protected by authentication here
+    // For example: "/dashboard/:path*", "/profile", etc.
+  ],
 };

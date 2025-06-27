@@ -1,23 +1,23 @@
 // Auth providers
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import Resend from "next-auth/providers/resend";
+
+// Resend SDK for email sending
+import { Resend as ResendClient } from "resend";
 
 // Database and ORM
 import { db } from "@/database";
-import { eq } from "drizzle-orm";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
 // Schema
 import { users } from "@/trpc/users/schema";
 import { accounts, sessions, verificationTokens } from "@/trpc/auth/schema";
 
-// Utilities
-import { verifyPassword } from "./utils/webcrypto";
-
-// This empty import is needed for the module augmentation below
-import type {} from "next-auth/jwt";
+// Custom Email Template
+import { MagicLinkEmail } from "@/components/emails/magic-link-email";
+import { render } from "@react-email/render";
 
 /**
  * Type Extensions for NextAuth
@@ -47,16 +47,6 @@ declare module "next-auth" {
 }
 
 /**
- * Extend the JWT type to include role information in the token
- */
-declare module "next-auth/jwt" {
-  interface JWT {
-    role?: string | null;
-    sub: string;
-  }
-}
-
-/**
  * NextAuth configuration
  *
  * This exports the NextAuth handlers, signIn, signOut, and auth functions
@@ -71,29 +61,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
 
-  // Use JWT for session management
-  session: { strategy: "jwt" },
+  // Set session strategy to database for Magic Links and Google OAuth
+  session: {
+    strategy: "database",
+    maxAge: 1 * 24 * 60 * 60, // 1 day
+  },
 
-  // Custom callbacks for session and JWT handling
+  // Explicitly configure cookies to ensure proper session handling
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+
+  // Custom callbacks for session handling
   callbacks: {
     /**
-     * Add user ID and role to the session from the token
+     * Add user ID and role to the session from the user object
+     * When using database sessions, we get the user object instead of token
      */
-    async session({ session, token }) {
-      session.user.id = token.sub;
-      session.user.role = token.role;
-      return session;
-    },
-
-    /**
-     * Add user role to the JWT token
-     */
-    async jwt({ token, user }) {
+    async session({ session, user }) {
       if (user) {
-        // Default to "user" role if none is specified
-        token.role = user.role ?? "user";
+        session.user.id = user.id as string;
+        session.user.role = user.role;
       }
-      return token;
+      return session;
     },
   },
 
@@ -105,46 +103,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
 
-    // Email/Password credentials provider
-    Credentials({
-      credentials: { email: {}, password: {} },
+    // Resend email provider with custom email template
+    Resend({
+      from: "Sora <onboarding@resend.dev>",
+      apiKey: process.env.AUTH_RESEND_KEY,
+      sendVerificationRequest: async ({ identifier, url, provider }) => {
+        const { host } = new URL(url);
 
-      /**
-       * Authorize user with email and password
-       *
-       * @param credentials - The credentials provided by the user
-       * @returns The user object if authentication succeeds, null otherwise
-       */
-      authorize: async (credentials) => {
-        // Validate credentials exist
-        if (!credentials?.email || !credentials?.password) return null;
+        // Create a Resend client instance using the API key
+        const resendClient = new ResendClient(provider.apiKey);
 
-        // Find user by email
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email as string));
+        // Render the email template to HTML
+        const emailHtml = await render(MagicLinkEmail({ url, host }));
 
-        // Verify user exists and has a password
-        if (!user || !user.password) return null;
-
-        // Verify password using Argon2
-        const isValid = await verifyPassword(
-          credentials.password as string,
-          user.password
-        );
-
-        // Return null if password is invalid
-        if (!isValid) return null;
-
-        // Return user object for successful authentication
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        };
+        // Send the email using the Resend SDK
+        await resendClient.emails.send({
+          to: identifier,
+          from: provider.from!,
+          subject: `Sign in to ${host}`,
+          html: emailHtml,
+        });
       },
     }),
   ],
