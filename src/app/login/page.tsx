@@ -24,6 +24,7 @@ import { useMutation } from "@tanstack/react-query";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const {
     register,
@@ -47,8 +48,10 @@ export default function LoginPage() {
 
       return result;
     },
-    onSuccess: () => {
-      // show message that a login link was sent to their email
+    onSuccess: (_, variables) => {
+      // Show message that a login link was sent to their email
+      setSuccessMessage(`We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`);
+      setError("");
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -57,12 +60,14 @@ export default function LoginPage() {
 
   const onSubmit = handleSubmit((data) => {
     setError("");
+    setSuccessMessage("");
     mutate(data);
   });
 
   // Function to handle Google sign-in
   const handleGoogleSignIn = async () => {
     setError("");
+    setSuccessMessage("");
     try {
       await signIn("google", { redirectTo: "/" });
     } catch {
@@ -86,6 +91,11 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            {successMessage && (
+              <div className="p-3 text-sm text-white bg-green-500 rounded-md">
+                {successMessage}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -105,7 +115,7 @@ export default function LoginPage() {
               className="w-full cursor-pointer"
               disabled={isPending}
             >
-              {isPending ? "Logging in..." : "Login"}
+              {isPending ? "Logging in..." : "Login with email"}
             </Button>
 
             {/* Google Sign-In Button */}
