@@ -38,9 +38,9 @@ export default function SignupPage() {
   });
 
   // Use the useMutation hook with the tRPC options
-  const { mutate, isPending } = useMutation({
-    ...trpc.user.register.mutationOptions(),
-    onSuccess: async (_data, variables) => {
+  const { mutate, isPending } = useMutation(
+    trpc.user.register.mutationOptions({
+      onSuccess: async (_data, variables) => {
       const result = await signIn("resend", {
         redirect: false,
         email: variables.email,
@@ -54,7 +54,8 @@ export default function SignupPage() {
       setError(err.message);
       console.error(err);
     },
-  });
+    }),
+  );
 
   const onSubmit = handleSubmit((data) => {
     setError("");
