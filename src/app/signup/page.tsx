@@ -4,7 +4,6 @@ import type React from "react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +25,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const trpc = useTRPC();
 
   const {
@@ -42,14 +41,13 @@ export default function SignupPage() {
   const { mutate, isPending } = useMutation({
     ...trpc.user.register.mutationOptions(),
     onSuccess: async (_data, variables) => {
-      const result = await signIn("credentials", {
+      const result = await signIn("resend", {
         redirect: false,
         email: variables.email,
-        password: variables.password,
       });
       if (result?.ok) {
-        router.push("/");
-        router.refresh();
+        setSuccessMessage(`We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`);
+        setError("");
       }
     },
     onError: (err) => {
@@ -58,14 +56,13 @@ export default function SignupPage() {
     },
   });
 
-  // Create the submit handler that uses both RHF and tRPC mutation
   const onSubmit = handleSubmit((data) => {
     setError("");
+    setSuccessMessage("");
 
     mutate({
       name: `${data.firstName} ${data.lastName}`,
       email: data.email,
-      password: data.password,
     });
   });
 
@@ -83,6 +80,11 @@ export default function SignupPage() {
             {error && (
               <div className="p-3 text-sm text-white bg-red-500 rounded-md">
                 {error}
+              </div>
+            )}
+            {successMessage && (
+              <div className="p-3 text-sm text-white bg-green-500 rounded-md">
+                {successMessage}
               </div>
             )}
             <div className="space-y-2">
@@ -121,20 +123,6 @@ export default function SignupPage() {
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                {...register("password")}
-                aria-invalid={errors.password ? "true" : "false"}
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">
-                  {errors.password.message}
-                </p>
               )}
             </div>
           </CardContent>

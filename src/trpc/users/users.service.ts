@@ -5,7 +5,6 @@ import type { User } from "./schema";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import logger from "../logger";
 import { TRPCError } from "@trpc/server";
-import { hashPassword } from "../../utils/webcrypto";
 
 class UsersService {
   private db: NeonHttpDatabase;
@@ -14,11 +13,7 @@ class UsersService {
     this.db = database;
   }
 
-  async createUser(userData: {
-    name: string;
-    email: string;
-    password: string;
-  }) {
+  async createUser(userData: { name: string; email: string }) {
     try {
       // Check if user with this email already exists
       const existingUser = await this.db
@@ -33,16 +28,12 @@ class UsersService {
         });
       }
 
-      // Hash the password
-      const hashedPassword = await hashPassword(userData.password);
-
       // Create the user with hashed password
       const [newUser] = await this.db
         .insert(users)
         .values({
           name: userData.name,
           email: userData.email,
-          password: hashedPassword,
         })
         .returning();
 

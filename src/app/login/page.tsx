@@ -20,11 +20,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { signIn } from "next-auth/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/utils/trpc";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [userNotFound, setUserNotFound] = useState(false);
+  const trpc = useTRPC();
 
   const {
     register,
@@ -34,24 +37,65 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const [emailToCheck, setEmailToCheck] = useState("");
+
+  // Use the tRPC queryOptions directly
+  const queryOptions = trpc.user.findByEmail.queryOptions({ email: emailToCheck });
+  const { data: userQueryResult, refetch } = useQuery({
+    ...queryOptions,
+    enabled: false // Don't run the query on component mount
+  });
+
+  // Custom function to check if user exists by email
+  const checkUserExists = async (options: { email: string }) => {
+    if (!options.email) {
+      return { exists: false, user: null };
+    }
+    setEmailToCheck(options.email);
+    const result = await refetch();
+    return result.data ?? { exists: false, user: null };
+  };
+
   // Use the useMutation hook for login
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: inferredLoginSchema) => {
-      const result = await signIn("resend", {
-        redirect: false,
-        email: data.email,
-      });
+      try {
+        // First check if the user exists
+        await checkUserExists({ email: data.email });
 
-      if (result?.error) {
-        throw new Error("Invalid email or password");
+        // After refetch, userQueryResult will be updated
+        // Use type guard to check if userQueryResult exists and has the expected structure
+        if (!userQueryResult || typeof userQueryResult !== 'object' || !('exists' in userQueryResult) || userQueryResult.exists === false) {
+          setUserNotFound(true);
+          throw new Error(`No account found with email ${data.email}`);
+        }
+
+        const result = await signIn("resend", {
+          redirect: false,
+          email: data.email,
+        });
+
+        if (result?.error) {
+          throw new Error("Invalid email or password");
+        }
+
+        return result;
+      } catch (error) {
+        // Check if it's a TRPC error related to the user not being found
+        if (error instanceof Error &&
+            (error.message.includes("No account found") ||
+             error.message.includes("Failed to retrieve user"))) {
+          setUserNotFound(true);
+          throw new Error(`No account found with email ${data.email}`);
+        }
+        // For other errors, just pass them through
+        throw error;
       }
-
-      return result;
     },
     onSuccess: (_, variables) => {
-      // Show message that a login link was sent to their email
       setSuccessMessage(`We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`);
       setError("");
+      setUserNotFound(false);
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -61,6 +105,7 @@ export default function LoginPage() {
   const onSubmit = handleSubmit((data) => {
     setError("");
     setSuccessMessage("");
+    setUserNotFound(false);
     mutate(data);
   });
 
@@ -68,6 +113,7 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setError("");
     setSuccessMessage("");
+    setUserNotFound(false);
     try {
       await signIn("google", { redirectTo: "/" });
     } catch {
@@ -89,6 +135,14 @@ export default function LoginPage() {
             {error && (
               <div className="p-3 text-sm text-white bg-red-500 rounded-md">
                 {error}
+                {userNotFound && (
+                  <div className="mt-2">
+                    <span>{`Don't have an account?`} </span>
+                    <Link href="/signup" className="underline font-medium">
+                      Sign up here
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
             {successMessage && (
