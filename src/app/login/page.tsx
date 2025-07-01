@@ -20,14 +20,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { signIn } from "next-auth/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/utils/trpc";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPCClient } from "@/utils/trpc";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [userNotFound, setUserNotFound] = useState(false);
-  const trpc = useTRPC();
+  const trpcClient = useTRPCClient();
 
   const {
     register,
@@ -37,23 +37,11 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const [emailToCheck, setEmailToCheck] = useState("");
-
-  // Use the tRPC queryOptions directly
-  const queryOptions = trpc.user.findByEmail.queryOptions({ email: emailToCheck });
-  const { data: userQueryResult, refetch } = useQuery({
-    ...queryOptions,
-    enabled: false // Don't run the query on component mount
-  });
 
   // Custom function to check if user exists by email
-  const checkUserExists = async (options: { email: string }) => {
-    if (!options.email) {
-      return { exists: false, user: null };
-    }
-    setEmailToCheck(options.email);
-    const result = await refetch();
-    return result.data ?? { exists: false, user: null };
+  const checkUserExists: (email: string) => Promise<boolean> = async (email: string) => {
+    const user = await trpcClient.user.findByEmail.query({ email });
+    return user.exists;
   };
 
   // Use the useMutation hook for login
@@ -61,13 +49,10 @@ export default function LoginPage() {
     mutationFn: async (data: inferredLoginSchema) => {
       try {
         // First check if the user exists
-        await checkUserExists({ email: data.email });
+        const userExists = await checkUserExists(data.email);
 
-        // After refetch, userQueryResult will be updated
-        // Use type guard to check if userQueryResult exists and has the expected structure
-        if (!userQueryResult || typeof userQueryResult !== 'object' || !('exists' in userQueryResult) || userQueryResult.exists === false) {
-          setUserNotFound(true);
-          throw new Error(`No account found with email ${data.email}`);
+        if (!userExists) {
+          throw new Error("No account found");
         }
 
         const result = await signIn("resend", {
