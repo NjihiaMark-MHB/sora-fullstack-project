@@ -17,10 +17,8 @@ import {
 } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createUserSchema
-} from "@/app-zod-schemas/auth";
-import type {inferredCreateUserSchema} from "@/app-zod-schemas/auth";
+import { createUserSchema } from "@/app-zod-schemas/auth";
+import type { inferredCreateUserSchema } from "@/app-zod-schemas/auth";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
 
@@ -41,20 +39,22 @@ export default function SignupPage() {
   const { mutate, isPending } = useMutation(
     trpc.user.register.mutationOptions({
       onSuccess: async (_data, variables) => {
-      const result = await signIn("resend", {
-        redirect: false,
-        email: variables.email,
-      });
-      if (result?.ok) {
-        setSuccessMessage(`We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`);
-        setError("");
-      }
-    },
-    onError: (err) => {
-      setError(err.message);
-      console.error(err);
-    },
-    }),
+        const result = await signIn("resend", {
+          redirect: false,
+          email: variables.email,
+        });
+        if (result?.ok) {
+          setSuccessMessage(
+            `We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`
+          );
+          setError("");
+        }
+      },
+      onError: (err) => {
+        setError(err.message);
+        console.error(err);
+      },
+    })
   );
 
   const onSubmit = handleSubmit((data) => {

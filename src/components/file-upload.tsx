@@ -44,7 +44,7 @@ export function FileUpload({ variant = "default" }: FileUploadProps) {
       setIsOpen(false);
       setSelectedFile(null);
 
-      toast("File uploaded", {
+      toast.success("File uploaded", {
         description: `${selectedFile.name} has been uploaded successfully.`,
       });
     }, 1500);

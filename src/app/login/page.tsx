@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/app-zod-schemas/auth";
-import type {inferredLoginSchema} from "@/app-zod-schemas/auth";
+import type { inferredLoginSchema } from "@/app-zod-schemas/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,9 +37,10 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-
   // Custom function to check if user exists by email
-  const checkUserExists: (email: string) => Promise<boolean> = async (email: string) => {
+  const checkUserExists: (email: string) => Promise<boolean> = async (
+    email: string
+  ) => {
     const user = await trpcClient.user.findByEmail.query({ email });
     return user.exists;
   };
@@ -67,9 +68,11 @@ export default function LoginPage() {
         return result;
       } catch (error) {
         // Check if it's a TRPC error related to the user not being found
-        if (error instanceof Error &&
-            (error.message.includes("No account found") ||
-             error.message.includes("Failed to retrieve user"))) {
+        if (
+          error instanceof Error &&
+          (error.message.includes("No account found") ||
+            error.message.includes("Failed to retrieve user"))
+        ) {
           setUserNotFound(true);
           throw new Error(`No account found with email ${data.email}`);
         }
@@ -78,7 +81,9 @@ export default function LoginPage() {
       }
     },
     onSuccess: (_, variables) => {
-      setSuccessMessage(`We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`);
+      setSuccessMessage(
+        `We've sent a login link to ${variables.email}. Please check your inbox and click the link to sign in.`
+      );
       setError("");
       setUserNotFound(false);
     },

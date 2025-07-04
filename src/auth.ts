@@ -42,9 +42,21 @@ declare module "next-auth" {
     user: {
       role?: string | null;
       id: string;
+      avatar?: string;
     } & DefaultSession["user"];
   }
 }
+
+/**
+ * Export the Session type for use in other files
+ */
+export type Session = {
+  user: {
+    role?: string | null;
+    id: string;
+    avatar?: string;
+  } & DefaultSession["user"];
+};
 
 /**
  * NextAuth configuration
@@ -90,6 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         session.user.id = user.id as string;
         session.user.role = user.role;
+        session.user.avatar = user.image || "";
       }
       return session;
     },

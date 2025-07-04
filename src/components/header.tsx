@@ -71,7 +71,7 @@ export function Header() {
                 className="rounded-full cursor-pointer"
               >
                 <Avatar>
-                  <AvatarImage src={session?.user?.image || ''} alt="User" />
+                  <AvatarImage src={session?.user?.image || ""} alt="User" />
                   <AvatarFallback>
                     {getInitials(session?.user?.name)}
                   </AvatarFallback>
@@ -79,8 +79,9 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/profile">Profile</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
