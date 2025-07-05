@@ -4,6 +4,17 @@ import type React from "react";
 
 import type { Session } from "@/auth";
 import { AvatarUpload } from "@/components/avatar-upload";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -93,6 +104,28 @@ export function ProfileForm({ user }: ProfileFormProps) {
     formData.lastName !== (propLastName || "") ||
     formData.email !== user.email ||
     formData.avatar !== (user.avatar || "");
+
+  const handleDeleteAccount = async () => {
+    setIsLoading(true);
+    try {
+      // In a real world application, you would call an API to delete the account
+      //For demo purposes, we'll just show a toast and redirect
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      toast.success("Account deleted", {
+        description: "Your account has been permanently deleted.",
+      });
+
+      router.push("/login");
+      router.refresh();
+    } catch {
+      toast.error("Error", {
+        description: "Failed to delete account. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -195,9 +228,36 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" className="w-full md:w-auto">
-            Delete Account
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full md:w-auto">
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  This action cannot be undone. This will permanently delete
+                  your account and remove all your data from our servers
+                  <br />
+                  <span className="font-medium">
+                    All your files, folders, and personal information will be
+                    permanently lost.
+                  </span>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                  onClick={handleDeleteAccount}
+                >
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
