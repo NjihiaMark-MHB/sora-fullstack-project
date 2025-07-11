@@ -29,7 +29,8 @@ export function GoogleSignIn({ mode, onError, onSuccess }: GoogleSignInProps) {
 
   const linkText = mode === "login" ? "Sign up" : "Login";
   const linkHref = mode === "login" ? "/signup" : "/login";
-  const questionText = mode === "login" ? "Don't have an account?" : "Already have an account?";
+  const questionText =
+    mode === "login" ? "Don't have an account?" : "Already have an account?";
 
   return (
     <>

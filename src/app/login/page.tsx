@@ -2,6 +2,7 @@
 
 import type { inferredLoginSchema } from "@/app-zod-schemas/auth";
 import { loginSchema } from "@/app-zod-schemas/auth";
+import { GoogleSignIn } from "@/components/google-signin";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { GoogleSignIn } from "@/components/google-signin";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTRPCClient } from "@/utils/trpc";
@@ -97,9 +97,6 @@ export default function LoginPage() {
     setUserNotFound(false);
     mutate(data);
   });
-
-  // Function to handle Google sign-in
-
 
   return (
     <div className="flex w-full items-center justify-center min-h-screen bg-muted/40">
