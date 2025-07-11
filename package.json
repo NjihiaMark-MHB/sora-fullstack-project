@@ -15,6 +15,7 @@
     "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:revert": "drizzle-kit revert",
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "prepare": "husky"
   },
   "dependencies": {
