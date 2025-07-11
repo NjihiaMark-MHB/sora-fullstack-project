@@ -29,8 +29,8 @@ import { Separator } from "@/components/ui/separator";
 import { useTRPC } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -41,7 +41,6 @@ type ProfileFormProps = {
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const propFirstName = user.name?.split(" ")[0];
   const propLastName = user.name?.split(" ")[1];
   const propEmail = user.email;
@@ -82,8 +81,26 @@ export function ProfileForm({ user }: ProfileFormProps) {
     })
   );
 
+  const { mutate: deleteUser, isPending: deleteUserPending } = useMutation(
+    trpc.user.deleteUser.mutationOptions({
+      onSuccess: async () => {
+        toast.success("Account deleted", {
+          description: "Your account has been deleted successfully.",
+        });
+        await signOut();
+        router.push("/login");
+        router.refresh();
+      },
+      onError: (error: unknown) => {
+        toast.error("Error", {
+          description: "Failed to delete account. Please try again.",
+        });
+        console.error(error);
+      },
+    })
+  );
+
   const onSubmit = (data: inferredCreateUserSchema) => {
-    console.log("Form data:", data);
     mutate({
       id: user.id,
       data: {
@@ -94,25 +111,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
   };
 
   const handleDeleteAccount = async () => {
-    setIsLoading(true);
-    try {
-      // In a real world application, you would call an API to delete the account
-      //For demo purposes, we'll just show a toast and redirect
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.success("Account deleted", {
-        description: "Your account has been permanently deleted.",
-      });
-
-      router.push("/login");
-      router.refresh();
-    } catch {
-      toast.error("Error", {
-        description: "Failed to delete account. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    deleteUser({
+      id: user.id,
+    });
   };
 
   return (
@@ -230,9 +231,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <AlertDialogAction
                   className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                   onClick={handleDeleteAccount}
-                  disabled={isLoading}
+                  disabled={deleteUserPending}
                 >
-                  Yes, delete my account
+                  {deleteUserPending ? "Deleting..." : "Yes, delete my account"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

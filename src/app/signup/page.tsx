@@ -11,13 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GoogleSignIn } from "@/components/google-signin";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTRPC } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -136,12 +136,17 @@ export default function SignupPage() {
             >
               {isPending ? "Creating account..." : "Sign Up"}
             </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="underline text-primary">
-                Login
-              </Link>
-            </div>
+            <GoogleSignIn
+              mode="signup"
+              onError={(error) => {
+                setError(error);
+                setSuccessMessage("");
+              }}
+              onSuccess={() => {
+                setError("");
+                setSuccessMessage("");
+              }}
+            />
           </CardFooter>
         </form>
       </Card>
