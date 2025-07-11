@@ -1,7 +1,7 @@
 "use client";
 
-import type React from "react";
-
+import type { inferredCreateUserSchema } from "@/app-zod-schemas/auth";
+import { createUserSchema } from "@/app-zod-schemas/auth";
 import type { Session } from "@/auth";
 import { AvatarUpload } from "@/components/avatar-upload";
 import {
@@ -26,8 +26,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useTRPC } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 type ProfileFormProps = {
@@ -35,75 +39,59 @@ type ProfileFormProps = {
   avatar?: string;
 };
 
-async function updateProfile({ user, avatar }: ProfileFormProps) {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatar,
-  };
-}
-
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const propFirstName = user.name?.split(" ")[0];
   const propLastName = user.name?.split(" ")[1];
+  const propEmail = user.email;
+  const propAvatar = user.avatar || "";
+  const trpc = useTRPC();
 
-  const [formData, setFormData] = useState({
-    firstName: propFirstName || "",
-    lastName: propLastName || "",
-    email: user.email || "",
-    avatar: user?.avatar || "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<inferredCreateUserSchema>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      firstName: propFirstName!,
+      lastName: propLastName!,
+      email: propEmail!,
+    },
   });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   const handleAvatarChange = (avatarUrl: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      avatar: avatarUrl,
-    }));
+    console.info(avatarUrl);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const { mutate, isPending } = useMutation(
+    trpc.user.updateUser.mutationOptions({
+      onSuccess: () => {
+        toast.success("Profile updated", {
+          description: "Your profile has been updated successfully.",
+        });
+      },
+      onError: (error: unknown) => {
+        toast.error("Error", {
+          description: "Failed to update profile. Please try again.",
+        });
+        console.error(error);
+      },
+    })
+  );
 
-    try {
-      await updateProfile({
-        user: {
-          id: user.id,
-          name: formData.firstName + formData.lastName,
-          email: formData.email,
-        },
-        avatar: formData.avatar,
-      });
-
-      toast.success("Profile updated", {
-        description: "Your profile has been updated successfully.",
-      });
-
-      router.refresh();
-    } catch {
-      toast.error("Error", {
-        description: "Failed to update profile. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (data: inferredCreateUserSchema) => {
+    console.log("Form data:", data);
+    mutate({
+      id: user.id,
+      data: {
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        email: data.email,
+      },
+    });
   };
-
-  const hasChanges =
-    formData.firstName !== (propFirstName || "") ||
-    formData.lastName !== (propLastName || "") ||
-    formData.email !== user.email ||
-    formData.avatar !== (user.avatar || "");
 
   const handleDeleteAccount = async () => {
     setIsLoading(true);
@@ -138,13 +126,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </CardHeader>
         <CardContent>
           <AvatarUpload
-            currentAvatar={formData.avatar}
+            currentAvatar={propAvatar}
             onAvatarChange={handleAvatarChange}
-            userName={
-              `${formData.firstName || ""} ${formData.lastName || ""}`.trim() ||
-              user?.email ||
-              ""
-            }
+            userName={`${propFirstName || ""} ${propLastName || ""}`.trim()}
           />
         </CardContent>
       </Card>
@@ -157,16 +141,14 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
+                  {...register("firstName")}
+                  aria-invalid={errors.firstName ? "true" : "false"}
                   placeholder="Enter your first name"
                 />
               </div>
@@ -174,10 +156,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
+                  {...register("lastName")}
+                  aria-invalid={errors.lastName ? "true" : "false"}
                   placeholder="Enter your last name"
                 />
               </div>
@@ -188,8 +168,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                {...register("email")}
+                aria-invalid={errors.email ? "true" : "false"}
                 placeholder="Enter your email address"
               />
             </div>
@@ -201,19 +181,17 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setFormData({
-                    firstName: propFirstName || "",
-                    lastName: propLastName || "",
-                    email: user.email || "",
-                    avatar: user.avatar || "",
+                  reset({
+                    firstName: propFirstName!,
+                    lastName: propLastName!,
+                    email: propEmail!,
                   });
                 }}
-                disabled={!hasChanges}
               >
                 Reset
               </Button>
-              <Button type="submit" disabled={isLoading || !hasChanges}>
-                {isLoading ? "Saving..." : "Save Changes"}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </form>
@@ -252,6 +230,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <AlertDialogAction
                   className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                   onClick={handleDeleteAccount}
+                  disabled={isLoading}
                 >
                   Yes, delete my account
                 </AlertDialogAction>

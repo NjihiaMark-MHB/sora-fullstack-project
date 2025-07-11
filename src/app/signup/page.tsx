@@ -1,12 +1,8 @@
 "use client";
 
-import type React from "react";
-import { signIn } from "next-auth/react";
-import { useState } from "react";
-import Link from "next/link";
+import type { inferredCreateUserSchema } from "@/app-zod-schemas/auth";
+import { createUserSchema } from "@/app-zod-schemas/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,12 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserSchema } from "@/app-zod-schemas/auth";
-import type { inferredCreateUserSchema } from "@/app-zod-schemas/auth";
-import { useMutation } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useTRPC } from "@/utils/trpc";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 export default function SignupPage() {
   const [error, setError] = useState("");
@@ -94,6 +93,7 @@ export default function SignupPage() {
                 id="firstName"
                 {...register("firstName")}
                 aria-invalid={errors.firstName ? "true" : "false"}
+                placeholder="Enter your first name"
               />
               {errors.firstName && (
                 <p className="text-sm text-red-500">
@@ -107,6 +107,7 @@ export default function SignupPage() {
                 id="lastName"
                 {...register("lastName")}
                 aria-invalid={errors.lastName ? "true" : "false"}
+                placeholder="Enter your last name"
               />
               {errors.lastName && (
                 <p className="text-sm text-red-500">

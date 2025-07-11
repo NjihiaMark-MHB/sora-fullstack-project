@@ -1,5 +1,5 @@
-import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
+import { publicProcedure, router } from "../trpc";
 import { usersService } from "./users.service";
 
 export const usersRouter = router({
@@ -28,6 +28,44 @@ export const usersRouter = router({
       } catch (error) {
         console.log("findByEmail ——", error);
         return { exists: false, user: null };
+      }
+    }),
+
+  updateUser: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: z.object({
+          name: z.string().min(1).optional(),
+          email: z.string().email().optional(),
+          image: z.string().optional(),
+          role: z.string().optional(),
+        }),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const updatedUser = await usersService.updateUser(input.id, input.data);
+        return { success: true, user: updatedUser };
+      } catch (error) {
+        console.log("updateUser ——", error);
+        throw error;
+      }
+    }),
+
+  deleteUser: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const deletedUser = await usersService.deleteUser(input.id);
+        return { success: true, user: deletedUser };
+      } catch (error) {
+        console.log("deleteUser ——", error);
+        throw error;
       }
     }),
 });
