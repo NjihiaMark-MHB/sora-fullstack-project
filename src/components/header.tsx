@@ -1,11 +1,7 @@
 "use client";
 
-import type React from "react";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Utility function to get initials from name
 const getInitials = (name: string | null | undefined): string => {
@@ -71,7 +68,10 @@ export function Header() {
                 className="rounded-full cursor-pointer"
               >
                 <Avatar>
-                  <AvatarImage src={session?.user?.image || ""} alt="User" />
+                  <AvatarImage
+                    src={session?.user?.image || undefined}
+                    alt={session?.user?.name || "User"}
+                  />
                   <AvatarFallback>
                     {getInitials(session?.user?.name)}
                   </AvatarFallback>

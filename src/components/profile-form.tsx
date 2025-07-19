@@ -62,7 +62,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   });
 
   const handleAvatarChange = (avatarUrl: string) => {
-    console.info(avatarUrl);
+    console.debug("avatarUrl:", avatarUrl);
   };
 
   const { mutate, isPending } = useMutation(

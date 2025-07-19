@@ -2,10 +2,10 @@
 
 import type React from "react";
 
-import { useState, useRef } from "react";
-import { Camera, Upload, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Camera, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface AvatarUploadProps {
