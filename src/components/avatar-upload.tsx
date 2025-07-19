@@ -20,7 +20,7 @@ export function AvatarUpload({
   userName,
 }: AvatarUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatar!);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getInitials = (name: string) => {
@@ -83,22 +83,17 @@ export function AvatarUpload({
     });
   };
 
-  const displayAvatar = previewUrl || currentAvatar;
-
   return (
     <div className="flex items-center gap-6">
       <div className="relative">
         <Avatar className="h-24 w-24">
-          <AvatarImage
-            src={displayAvatar || "/placeholder.svg"}
-            alt={userName}
-          />
+          <AvatarImage src={previewUrl || "/placeholder.svg"} alt={userName} />
           <AvatarFallback className="text-lg">
             {getInitials(userName)}
           </AvatarFallback>
         </Avatar>
 
-        {displayAvatar && (
+        {previewUrl && (
           <Button
             type="button"
             variant="destructive"
@@ -129,7 +124,7 @@ export function AvatarUpload({
             ) : (
               <>
                 <Camera className="h-4 w-4" />
-                {displayAvatar ? "Change" : "Upload"}
+                {previewUrl ? "Change" : "Upload"}
               </>
             )}
           </Button>
