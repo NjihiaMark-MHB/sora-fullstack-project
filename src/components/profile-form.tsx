@@ -130,6 +130,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             currentAvatar={propAvatar}
             onAvatarChange={handleAvatarChange}
             userName={`${propFirstName || ""} ${propLastName || ""}`.trim()}
+            userId={user.id}
           />
         </CardContent>
       </Card>
