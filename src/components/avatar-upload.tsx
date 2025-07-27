@@ -4,6 +4,8 @@ import type React from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useTRPC } from "@/utils/trpc";
+import { useMutation } from "@tanstack/react-query";
 import { Camera, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,16 +14,54 @@ interface AvatarUploadProps {
   currentAvatar?: string;
   onAvatarChange: (avatarUrl: string) => void;
   userName: string;
+  userId: string;
 }
 
 export function AvatarUpload({
   currentAvatar,
   onAvatarChange,
   userName,
+  userId,
 }: AvatarUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatar!);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const trpc = useTRPC();
+
+  const { mutate, isPending } = useMutation(
+    trpc.user.uploadAvatar.mutationOptions({
+      onSuccess: () => {
+        toast.success("Avatar updated", {
+          description: "Your profile picture has been updated successfully.",
+        });
+        // Refresh the page to show updated avatar
+        window.location.reload();
+      },
+      onError: (error: unknown) => {
+        toast.error("Error", {
+          description: "Failed to update profile picture. Please try again.",
+        });
+        console.error(error);
+      },
+    })
+  );
+
+  const { mutate: deleteMutate, isPending: isDeleting } = useMutation(
+    trpc.user.deleteAvatar.mutationOptions({
+      onSuccess: () => {
+        toast.success("Avatar deleted", {
+          description: "Your profile picture has been deleted successfully.",
+        });
+        // Refresh the page to show updated avatar
+        window.location.reload();
+      },
+      onError: (error: unknown) => {
+        toast.error("Error", {
+          description: "Failed to delete profile picture. Please try again.",
+        });
+        console.error(error);
+      },
+    })
+  );
 
   const getInitials = (name: string) => {
     return name
@@ -32,7 +72,22 @@ export function AvatarUpload({
       .slice(0, 2);
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        setPreviewUrl(base64);
+        resolve(base64.split(",")[1]); // Remove data:image/jpeg;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -52,34 +107,34 @@ export function AvatarUpload({
       return;
     }
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPreviewUrl(result);
-    };
-    reader.readAsDataURL(file);
+    const fileData = await fileToBase64(file);
 
-    // Simulate upload
-    setIsUploading(true);
-    setTimeout(() => {
-      const mockUrl = URL.createObjectURL(file);
-      onAvatarChange(mockUrl);
-      setIsUploading(false);
-      toast.success("Avatar updated", {
-        description: "Your profile picture has been updated successfully.",
-      });
-    }, 1500);
+    mutate({
+      userId: userId,
+      fileName: file.name,
+      fileData: fileData,
+      contentType: file.type,
+    });
   };
 
   const handleRemoveAvatar = () => {
-    setPreviewUrl(null);
-    onAvatarChange("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (!currentAvatar) {
+      // If no current avatar, just clear the preview
+      setPreviewUrl(null);
+      onAvatarChange("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      toast.success("Avatar removed", {
+        description: "Your profile picture has been removed.",
+      });
+      return;
     }
-    toast.success("Avatar removed", {
-      description: "Your profile picture has been removed.",
+
+    // If there's a current avatar, delete it from the server
+    deleteMutate({
+      userId: userId,
+      avatarUrl: currentAvatar,
     });
   };
 
@@ -100,6 +155,7 @@ export function AvatarUpload({
             size="icon"
             className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
             onClick={handleRemoveAvatar}
+            disabled={isDeleting}
           >
             <X className="h-3 w-3" />
           </Button>
@@ -113,10 +169,10 @@ export function AvatarUpload({
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
+            disabled={isPending}
             className="gap-2"
           >
-            {isUploading ? (
+            {isPending ? (
               <>
                 <Upload className="h-4 w-4 animate-spin" />
                 Uploading...

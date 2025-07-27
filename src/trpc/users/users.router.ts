@@ -68,4 +68,36 @@ export const usersRouter = router({
         throw error;
       }
     }),
+
+  uploadAvatar: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        fileName: z.string(),
+        fileData: z.string(), // base64 encoded file
+        contentType: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await usersService.uploadAvatar({
+        userId: input.userId,
+        fileName: input.fileName,
+        fileData: input.fileData,
+        contentType: input.contentType,
+      });
+    }),
+
+  deleteAvatar: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        avatarUrl: z.string().url(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await usersService.deleteAvatar({
+        userId: input.userId,
+        avatarUrl: input.avatarUrl,
+      });
+    }),
 });
