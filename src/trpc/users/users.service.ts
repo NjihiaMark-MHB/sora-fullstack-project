@@ -153,9 +153,9 @@ class UsersService {
 
       if (buffer.length > 5 * 1024 * 1024) {
         // 5MB limit
-        throw new TRPCError({ 
-          code: "BAD_REQUEST", 
-          message: "File too large" 
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "File too large",
         });
       }
 
@@ -201,70 +201,70 @@ class UsersService {
         message: "Failed to upload avatar",
       });
     }
-   }
+  }
 
-   async deleteAvatar({
-     userId,
-     avatarUrl,
-   }: {
-     userId: string;
-     avatarUrl: string;
-   }) {
-     try {
-       // Check if it's a Google avatar URL
-       const isGoogleAvatar = avatarUrl.includes('googleusercontent.com');
-       
-       if (isGoogleAvatar) {
-         // For Google avatars, just reset the user's image to null
-         const updatedUser = await this.updateUser(userId, {
-           image: null,
-         });
-         
-         return {
-           success: true,
-           message: 'Google avatar removed successfully',
-           user: updatedUser,
-         };
-       } else {
-         // For S3 avatars, extract the key and delete from S3
-         const s3UrlPattern = /https:\/\/[^.]+\.s3\.amazonaws\.com\/(.*)/;
-         const match = avatarUrl.match(s3UrlPattern);
-         
-         if (!match || !match[1]) {
-           throw new TRPCError({
-             code: 'BAD_REQUEST',
-             message: 'Invalid S3 avatar URL format',
-           });
-         }
-         
-         const s3Key = match[1];
-         
-         // Delete from S3 first
-         await deleteFromS3(s3Key);
-         
-         // Then reset the user's image to null
-         const updatedUser = await this.updateUser(userId, {
-           image: null,
-         });
-         
-         return {
-           success: true,
-           message: 'S3 avatar deleted successfully',
-           user: updatedUser,
-           deletedKey: s3Key,
-         };
-       }
-     } catch (error) {
-       if (error instanceof TRPCError) {
-         throw error; // Re-throw TRPC errors
-       }
-       logger.error({ service: 'UsersService - deleteAvatar' }, error as string);
-       throw new TRPCError({
-         code: 'INTERNAL_SERVER_ERROR',
-         message: 'Failed to delete avatar',
-       });
-     }
-   }
- }
+  async deleteAvatar({
+    userId,
+    avatarUrl,
+  }: {
+    userId: string;
+    avatarUrl: string;
+  }) {
+    try {
+      // Check if it's a Google avatar URL
+      const isGoogleAvatar = avatarUrl.includes("googleusercontent.com");
+
+      if (isGoogleAvatar) {
+        // For Google avatars, just reset the user's image to null
+        const updatedUser = await this.updateUser(userId, {
+          image: null,
+        });
+
+        return {
+          success: true,
+          message: "Google avatar removed successfully",
+          user: updatedUser,
+        };
+      } else {
+        // For S3 avatars, extract the key and delete from S3
+        const s3UrlPattern = /https:\/\/[^.]+\.s3\.amazonaws\.com\/(.*)/;
+        const match = avatarUrl.match(s3UrlPattern);
+
+        if (!match || !match[1]) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid S3 avatar URL format",
+          });
+        }
+
+        const s3Key = match[1];
+
+        // Delete from S3 first
+        await deleteFromS3(s3Key);
+
+        // Then reset the user's image to null
+        const updatedUser = await this.updateUser(userId, {
+          image: null,
+        });
+
+        return {
+          success: true,
+          message: "S3 avatar deleted successfully",
+          user: updatedUser,
+          deletedKey: s3Key,
+        };
+      }
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error; // Re-throw TRPC errors
+      }
+      logger.error({ service: "UsersService - deleteAvatar" }, error as string);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete avatar",
+      });
+    }
+  }
+}
 
 export const usersService = new UsersService(db);
