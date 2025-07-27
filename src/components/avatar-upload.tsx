@@ -33,10 +33,30 @@ export function AvatarUpload({
         toast.success("Avatar updated", {
           description: "Your profile picture has been updated successfully.",
         });
+        // Refresh the page to show updated avatar
+        window.location.reload();
       },
       onError: (error: unknown) => {
         toast.error("Error", {
           description: "Failed to update profile picture. Please try again.",
+        });
+        console.error(error);
+      },
+    })
+  );
+
+  const { mutate: deleteMutate, isPending: isDeleting } = useMutation(
+    trpc.user.deleteAvatar.mutationOptions({
+      onSuccess: () => {
+        toast.success("Avatar deleted", {
+          description: "Your profile picture has been deleted successfully.",
+        });
+        // Refresh the page to show updated avatar
+        window.location.reload();
+      },
+      onError: (error: unknown) => {
+        toast.error("Error", {
+          description: "Failed to delete profile picture. Please try again.",
         });
         console.error(error);
       },
@@ -98,13 +118,23 @@ export function AvatarUpload({
   };
 
   const handleRemoveAvatar = () => {
-    setPreviewUrl(null);
-    onAvatarChange("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (!currentAvatar) {
+      // If no current avatar, just clear the preview
+      setPreviewUrl(null);
+      onAvatarChange("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      toast.success("Avatar removed", {
+        description: "Your profile picture has been removed.",
+      });
+      return;
     }
-    toast.success("Avatar removed", {
-      description: "Your profile picture has been removed.",
+
+    // If there's a current avatar, delete it from the server
+    deleteMutate({
+      userId: userId,
+      avatarUrl: currentAvatar,
     });
   };
 
@@ -125,6 +155,7 @@ export function AvatarUpload({
             size="icon"
             className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
             onClick={handleRemoveAvatar}
+            disabled={isDeleting}
           >
             <X className="h-3 w-3" />
           </Button>

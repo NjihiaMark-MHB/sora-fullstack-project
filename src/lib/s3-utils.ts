@@ -107,12 +107,23 @@ export async function fileExistsInS3(key: string): Promise<boolean> {
     await s3Client.send(command);
     return true;
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'name' in error && error.name === "NotFound") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "name" in error &&
+      error.name === "NotFound"
+    ) {
       return false;
     }
-    if (error && typeof error === 'object' && '$metadata' in error && 
-        typeof error.$metadata === 'object' && error.$metadata && 
-        'httpStatusCode' in error.$metadata && error.$metadata.httpStatusCode === 404) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "$metadata" in error &&
+      typeof error.$metadata === "object" &&
+      error.$metadata &&
+      "httpStatusCode" in error.$metadata &&
+      error.$metadata.httpStatusCode === 404
+    ) {
       return false;
     }
     console.error("Error checking file existence in S3:", error);

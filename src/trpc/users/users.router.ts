@@ -1,5 +1,3 @@
-import { generateUniqueKey, uploadToS3 } from "@/lib/s3-utils";
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 import { usersService } from "./users.service";
@@ -81,52 +79,25 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      // Server-side validation after buffer creation
-      if (!input.contentType.startsWith("image/")) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid file type",
-        });
-      }
-
-      // Convert base64 to buffer first
-      const buffer = Buffer.from(input.fileData, "base64");
-
-      if (buffer.length > 5 * 1024 * 1024) {
-        // 5MB limit
-        throw new TRPCError({ code: "BAD_REQUEST", message: "File too large" });
-      }
-
-      // Generate unique key for avatar
-      const key = generateUniqueKey(input.fileName, `avatars/${input.userId}/`);
-
-      // Upload directly to S3
-      const result = await uploadToS3({
-        key,
-        body: buffer,
+      return await usersService.uploadAvatar({
+        userId: input.userId,
+        fileName: input.fileName,
+        fileData: input.fileData,
         contentType: input.contentType,
-        metadata: {
-          userId: input.userId,
-          uploadedAt: new Date().toISOString(),
-        },
       });
+    }),
 
-      if (!result) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to upload avatar",
-        });
-      }
-
-      // Update user record with new avatar URL
-      await usersService.updateUser(input.userId, {
-        image: result.url,
+  deleteAvatar: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        avatarUrl: z.string().url(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await usersService.deleteAvatar({
+        userId: input.userId,
+        avatarUrl: input.avatarUrl,
       });
-
-      return {
-        success: true,
-        avatarUrl: result.url,
-        key: result.key,
-      };
     }),
 });
